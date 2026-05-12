@@ -37,6 +37,15 @@ Ask only what cannot be inferred from the prompt or repo:
    - unclear service contract or SLOs -> `requirements-slo-design`
 4. Finish with `likec4/SKILL.md` for the concrete `.c4` deliverable.
 
+## LikeC4 Finish Line
+
+Every route ends with a concrete `.c4` / `.likec4` deliverable:
+
+- Greenfield / requirements route: context view, container view, and one dynamic critical-flow view.
+- Tradeoff route: one container view per candidate, then the chosen option as the final context/container/dynamic view set.
+- Modernization route: current-state and target/transitional views, plus before/after critical-flow dynamic views.
+- Add deployment views only when regions, AZs, failover, runtime nodes, or rollout topology materially affect the design.
+
 ## Evaluation Lens
 
 Judge every design against measurable outcomes: latency, throughput/goodput, availability/error rate, cost per useful unit of work, and operability. Record hard-to-reverse decisions as ADRs. Keep diagrams, SLOs, failure modes, rollout confidence, and rollback paths concrete enough to change engineering behavior.

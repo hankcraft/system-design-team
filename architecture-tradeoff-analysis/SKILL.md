@@ -12,13 +12,21 @@ Who runs it: senior engineers, system architects, SREs. **Have the actual operat
 ## Process
 
 1. **Short quality-attribute workshop.** Produce a *ranked* set of concrete scenarios (not "it should be scalable" but "during a single-AZ outage, writes to the order path still succeed within 500 ms p99"). → output: `templates/quality-attribute-scenarios.md`.
-2. **Select two or three realistic candidate architectures.** Not ten. → output: a one-paragraph sketch + a LikeC4 container view per candidate.
+2. **Select two or three realistic candidate architectures.** Not ten. Assign stable candidate IDs (`candidate-a`, `candidate-b`, `candidate-c`). → output: a one-paragraph sketch + a LikeC4 container view per candidate.
 3. **Trace each ranked scenario through each candidate.** Mark **sensitivity points** (a decision that strongly affects one quality), **trade-off points** (a decision that affects two qualities in opposite directions), and **risks**. → output: rows in the trade-off matrix.
 4. **Score each candidate** against latency, throughput, availability, cost, operability, and **reversibility**. Use a coarse scale (e.g. ++ / + / 0 / − / −−); don't fake precision. → output: `templates/tradeoff-matrix.md`.
 5. **Build a spike or benchmark for the single most uncertain assumption** — usually a latency, saturation, or cost number. Theory must not outrun measurement. → output: benchmark notes.
 6. **Write the ADR**: chosen option, *rejected* options and why, evidence, consequences, exit criteria, review date. → output: `templates/adr-template.md`.
 
-Then invoke bundled **`likec4`** with the chosen candidate to produce the `.c4` document; keep the rejected candidates' container views in an appendix view if they aid the record.
+Then invoke bundled **`likec4`** with the chosen candidate to produce the `.c4` document; keep the rejected candidates' container views in appendix views when they aid the record.
+
+## LikeC4 handoff contract
+
+- Model each candidate with the same actors, external systems, and critical flow labels so differences are comparable.
+- Create one container view per candidate, named from the stable candidate ID, e.g. `candidate-a-containers`.
+- After the ADR chooses an option, make the chosen option the final context/container/dynamic view set. Do not leave only candidate sketches.
+- Preserve rejected candidates as appendix views only when they clarify the ADR; otherwise summarize them in ADR text.
+- Link or summarize the ADR and riskiest-assumption benchmark in `description`, `notes`, or `metadata`.
 
 ## Decision tree for distributed data-path choices
 
@@ -58,11 +66,11 @@ Mostly social/procedural: scoring spreadsheets that imply more precision than th
 ## Required artifacts
 
 - Ranked quality-attribute scenarios (`templates/quality-attribute-scenarios.md`)
-- A LikeC4 container view per candidate (a few, not many)
+- A LikeC4 container view per candidate (a few, not many), with stable candidate IDs
 - Trade-off matrix with sensitivity points, trade-off points, risks (`templates/tradeoff-matrix.md`)
 - Benchmark / spike notes for the riskiest assumption
 - One or more ADRs with rejected alternatives and a review date (`templates/adr-template.md`)
-- The final LikeC4 model for the chosen option (via bundled `likec4`)
+- The final LikeC4 model for the chosen option (via bundled `likec4`), including context, container, and dynamic critical-flow views
 
 ## Engineer-facing checklist
 

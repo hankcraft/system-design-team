@@ -95,7 +95,7 @@ Use this section when the user asks for a C4/LikeC4 diagram of a system, or when
 | Sub-parts worth showing | `component` nested in container |
 | Data flows / calls | labelled relationships, e.g. `a -> b 'verb' { technology 'protocol' }` |
 | Critical user flow / unhappy path | `dynamic view` with response arrows and one `parallel { ... }` block for fan-out when needed |
-| Brownfield current vs target | separate current/target views, or `tag legacy` / `tag new` plus filtered views |
+| Brownfield current vs target | separate current/target views, or `tag legacy` / `tag new` plus filtered views and before/after dynamic views |
 | Regions, AZs, nodes, failover | `deployment { ... }` plus `deployment view` |
 | Hard-to-reverse decisions | ADR/SLO references in `description`, `notes`, or `metadata` |
 
@@ -105,12 +105,18 @@ Use this section when the user asks for a C4/LikeC4 diagram of a system, or when
 - `view context { include <system>; include -> <system> -> }` for C4 L1 system context. Do not scope this view to the system; keep the system collapsed with neighbours around it.
 - `view containers of <system> { include * }` for C4 L2 containers. In a scoped view, `*` means the system plus direct children, not recursive descendants.
 - `dynamic view <flow> { ... }` for the critical flow, including expensive unhappy paths when relevant.
-- `deployment view <name> { include * }` only when regions, AZs, failover, or runtime topology matter.
+- `deployment view <name> { include * }` only when regions, AZs, failover, rollout topology, or runtime nodes materially affect the design.
+
+### Route-specific handoffs
+
+- Requirements/SLO route: context view, container view, dynamic critical-flow view.
+- ATAM route: one candidate container view per stable candidate ID, plus final context/container/dynamic views for the chosen option.
+- Modernization route: current and target/transitional container views, plus before/after dynamic critical-flow views.
 
 ### Concrete model bar
 
 - Model validates with no filtered errors in files you wrote.
-- Container view and dynamic critical-flow view exist for system-design deliverables.
+- Container view and dynamic critical-flow view exist for system-design deliverables; route-specific current/target or candidate views exist when required.
 - Every external dependency in the design appears as an element with a labelled relationship.
 - Failure-path elements from the design appear when relevant: dead-letter queues, fallback paths, circuit breaker boundaries, retry paths.
 - SLO targets, capacity assumptions, and ADR references are summarized or linked; do not dump full worksheets into diagram text.

@@ -21,6 +21,14 @@ Who runs it: staff engineers, system architects, SRE-heavy teams. It converges s
 
 For any genuinely irreversible cut along the way (a data-model change, a consistency-model change, a contract break), pause and run **`architecture-tradeoff-analysis`** on that specific decision.
 
+## LikeC4 handoff contract
+
+- Model current state first. Include the legacy component, current dependencies, and the current critical flow.
+- Model target or transitional state separately. Use `#legacy` and `#new` tags when both paths coexist in one model, and define those tags in `specification`.
+- Create current and target/transitional container views. Use names such as `current-containers` and `target-containers`.
+- Create before/after dynamic views for the migrated critical flow, including the gateway/flag/facade, durable command persistence, canary path, and rollback/kill-switch path when relevant.
+- Add a deployment view only when rollout topology matters, such as traffic-splitting gateways, regions, nodes, queues, or failover.
+
 ## Worked mini-case
 
 *Checkout extraction from a legacy monolith.* Route **only order submission** through a new API behind the existing gateway; persist commands durably; process asynchronously; keep fulfillment on the legacy side until correctness is proven. Stages: internal traffic → 5% → 25% → 100%. Compare: accepted-request latency, error rate, queue age, backlog drain time, cost per order. Fail fast on stale queued work; bound retries with backoff + jitter; keep a kill switch that routes all traffic back to the monolith if the canary deviates.
@@ -31,13 +39,14 @@ Zombie legacy code that never gets retired (the migration never *ends*); canarie
 
 ## Required artifacts
 
-- LikeC4 current-state model **and** target-state model (via bundled `likec4`)
+- LikeC4 current-state model **and** target/transitional model (via bundled `likec4`)
 - Dependency / flow map of the critical paths
 - Fitness-function definitions, runnable in CI / continuously (`templates/fitness-functions.md`)
 - Canary plan with stages, metrics, and abort criteria (`templates/canary-plan.md`)
 - Contract + regression tests across the seam
 - Canary dashboards; queue-age and saturation alerts
 - Rollback runbook with a kill switch (`templates/rollback-runbook.md`)
+- Current and target critical-flow dynamic views
 - ADRs tracking each irreversible cut; defined legacy-retirement criteria
 
 ## Engineer-facing checklist
