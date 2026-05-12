@@ -139,20 +139,20 @@ Never claim CLI execution happened unless it actually ran.
 ## Validation
 
 ```bash
-<runtime> likec4 validate --json --no-layout --file <edited-file> <project-dir>
+<runtime> likec4 validate --json --no-layout --file <path-from-current-working-directory> <project-dir>
 ```
 
 Runtime launchers are equivalent for this command family:
 
 ```bash
-npx likec4 validate --json --no-layout --file <edited-file> <project-dir>
-bunx likec4 validate --json --no-layout --file <edited-file> <project-dir>
-pnpm dlx likec4 validate --json --no-layout --file <edited-file> <project-dir>
+npx likec4 validate --json --no-layout --file <path-from-current-working-directory> <project-dir>
+bunx likec4 validate --json --no-layout --file <path-from-current-working-directory> <project-dir>
+pnpm dlx likec4 validate --json --no-layout --file <path-from-current-working-directory> <project-dir>
 ```
 
 - `--json` — structured output (stdout), logging goes to stderr
 - `--no-layout` — skip layout drift checks (faster, only syntax+semantic)
-- `--file <path>` — use with `--json` to scope results to the edited files. Without `--json`, text output still prints all diagnostics. Repeat once per edited source file.
+- `--file <path>` — use with `--json` to report only errors from edited files. The path is resolved from the command's current working directory, not from `<project-dir>`. When running from a repo root, pass repo-relative paths such as `projects/template/system-model.c4`. Repeat once per edited `.c4` / `.likec4` source file.
 - `<project-dir>` — path to the project directory
 - There is **no** `likec4 check` command; use `likec4 validate`.
 
@@ -176,21 +176,21 @@ Example output:
   "stats": {
     "totalFiles": 100, // Total number of files in the project
     "totalErrors": 500, // Total number of errors in the project
-    "filteredFiles": 1, // Number of files that match the --file filter
+    "filteredFiles": 1, // Number of source files with errors after applying the --file filter
     "filteredErrors": 1 // Number of errors in the filtered files
   }
 }
 ```
 
-Broken specification/model in a large project can cascade into lots of errors across all files. Always use `--file` to focus on the files you edited. If `filteredErrors` is 0 but `totalErrors` is high, your files are clean but something else in the project is broken (not your problem). Selfcheck that `filteredFiles` matches the number of files you passed to `--file`.
+Broken specification/model in a large project can cascade into lots of errors across all files. Always use `--file` to focus on the files you edited. If `filteredErrors` is 0 but `totalErrors` is high, the filtered files did not report errors; inspect `errors[].file` without the filter when you need to find the project-wide breakage. If `filteredErrors` is 0 when you expected failures, first check that each `--file` path matches the current working directory.
 
 Field semantics (must be explicit in answers):
 
-- `filteredFiles`: count of files actually included by repeated `--file` filters
+- `filteredFiles`: count of files that have reported errors after the `--file` filter; this is not a coverage count and need not equal the number of `--file` flags
 - `filteredErrors`: errors in the filtered subset only
 - `totalErrors`: errors across the full project model
 
-Example edge case: if you pass 3 files but one is `likec4.config.json`, `filteredFiles` may be `2` because config JSON is not a `.c4`/`.likec4` source file for DSL validation.
+Example edge case: if you pass two edited source files and both are clean while another project file is broken, `totalErrors` can be nonzero while `filteredFiles` and `filteredErrors` are both 0.
 
 ## Export PNG flags (precision)
 

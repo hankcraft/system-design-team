@@ -3,16 +3,17 @@
   "evals": [
     {
       "id": 0,
-      "expected_output": "The response gives the focused `likec4 validate` command with `--json`, `--no-layout`, `--file`, and the correct project path, then explains how to interpret `filteredFiles` and `filteredErrors` versus `totalErrors`.",
+      "expected_output": "The response gives the focused `likec4 validate` command with `--json`, `--no-layout`, `--file`, and the correct project path, then explains how to interpret `filteredErrors` versus `totalErrors` and notes that `--file` paths are relative to the command working directory.",
       "files": [],
       "expectations": [
         "The response uses `npx likec4 validate --json --no-layout --file projects/template/system-model.c4 projects/template` or an equivalent command with the same flags and project path; version pins such as `npx likec4@latest validate` are also accepted; platform-specific redirects like `2>/dev/null` are optional.",
         "The response explains that `--no-layout` skips layout drift checks.",
         "The response explains that `--file` scopes reported errors to the edited file.",
-        "The response mentions `filteredFiles` and `filteredErrors` as the key fields for the targeted file check.",
+        "The response mentions `filteredErrors` as the key field for the targeted file check.",
+        "The response says that `--file` paths are resolved from the command's current working directory.",
         "The response distinguishes those filtered fields from `totalErrors` or other project-wide counts."
       ],
-      "grading_guidance": "Accept any reasonable version pin in the command (`npx likec4@latest`, `npx likec4@X.Y.Z`, or bare `npx likec4`). Never require `2>/dev/null` or other platform-specific redirections. The semantic invariants — `--json`, `--no-layout`, `--file <path>`, correct project path, and accurate interpretation of `filteredFiles`/`filteredErrors`/`totalErrors` — must all be present for full credit."
+      "grading_guidance": "Accept any reasonable version pin in the command (`npx likec4@latest`, `npx likec4@X.Y.Z`, or bare `npx likec4`). Never require `2>/dev/null` or other platform-specific redirections. The semantic invariants — `--json`, `--no-layout`, `--file <path>`, correct project path, current-working-directory path semantics, and accurate interpretation of `filteredErrors`/`totalErrors` — must all be present for full credit. Do not require `filteredFiles` to equal the number of `--file` arguments."
     },
     {
       "id": 1,
@@ -298,16 +299,17 @@
     },
     {
       "id": 20,
-      "expected_output": "The response provides a `likec4 validate` command with `--json`, `--no-layout`, and repeated `--file` for both edited files, then explains checking `filteredFiles` and `filteredErrors` to confirm filter scope.",
+      "expected_output": "The response provides a `likec4 validate` command with `--json`, `--no-layout`, and repeated `--file` for both edited files, then explains checking `filteredErrors` and using paths relative to the command working directory.",
       "files": [],
       "expectations": [
         "The command uses `npx likec4 validate --json --no-layout`.",
         "The command passes two `--file` arguments, one for each edited file.",
         "The command includes the project path argument (e.g., `projects/template`).",
-        "The response explains that `filteredFiles` should equal 2 to confirm both files were filtered.",
+        "The response explains that `filteredErrors` reports errors from the requested filtered files.",
+        "The response does not claim that `filteredFiles` must equal 2.",
         "The response explains interpreting `filteredErrors` versus project-wide counts like `totalErrors`."
       ],
-      "grading_guidance": "Accept any reasonable version pin (`npx likec4@latest`, version-pinned, or bare `npx likec4`). The two `--file` flags, correct project path, and the `filteredFiles = 2` verification explanation are the strict semantic invariants; argument order is flexible."
+      "grading_guidance": "Accept any reasonable version pin (`npx likec4@latest`, version-pinned, or bare `npx likec4`). The two `--file` flags, correct project path, current-working-directory path semantics, and `filteredErrors` versus `totalErrors` explanation are the strict semantic invariants; argument order is flexible. Penalize answers that treat `filteredFiles = 2` as required coverage confirmation."
     },
     {
       "id": 21,
@@ -363,16 +365,16 @@
     },
     {
       "id": 25,
-      "expected_output": "The response provides a `likec4 validate` command with `--json`, `--no-layout`, and three repeated `--file` flags for the edited template files, explains the roles of `filteredFiles`, `filteredErrors`, and `totalErrors`, and states that `filteredFiles = 2` means one intended file was not actually included in the filter set.",
+      "expected_output": "The response provides a `likec4 validate` command with `--json`, `--no-layout`, and repeated `--file` flags for the edited `.c4` files, explains the roles of `filteredFiles`, `filteredErrors`, and `totalErrors`, and states that config JSON is not a `.c4` source file filter target.",
       "files": [],
       "expectations": [
         "The command uses `npx likec4 validate --json --no-layout`.",
-        "The command passes three `--file` arguments, one per edited file.",
+        "The command passes two `--file` arguments, one per edited `.c4` file, and does not pass `likec4.config.json` as a source-file filter.",
         "The command includes the template project path argument.",
         "The response explains `filteredFiles`, `filteredErrors`, and `totalErrors` distinctly.",
-        "The response explains that `filteredFiles = 2` means one of the intended files was not actually filtered by the command."
+        "The response explains that `filteredFiles` counts files with filtered reported errors, not the number of `--file` flags."
       ],
-      "grading_guidance": "Do not give full credit to answers that only restate the command. This eval checks partial filter coverage interpretation: `filteredFiles = 2` means one of the three intended files was not captured, and the response must state this explicitly. Prefer answers that put the command on the first line by itself when the prompt requires it. Accept any reasonable version pin (`npx likec4@latest`, `npx likec4@X.Y.Z`, or bare `npx likec4`). The semantic invariants — three `--file` flags, correct project path, accurate distinction of all three JSON fields, and the `filteredFiles = 2` interpretation — are strict and non-negotiable."
+      "grading_guidance": "Do not give full credit to answers that only restate the command. Prefer answers that put the command on the first line by itself when the prompt requires it. Accept any reasonable version pin (`npx likec4@latest`, `npx likec4@X.Y.Z`, or bare `npx likec4`). The semantic invariants — two source-file `--file` flags, no config JSON `--file`, correct project path, current-working-directory path semantics, and accurate distinction of all three JSON fields — are strict and non-negotiable. Penalize answers that say `filteredFiles = 2` proves all intended filters were captured."
     },
     {
       "id": 26,

@@ -105,7 +105,7 @@
     },
     {
       "id": 20,
-      "prompt": "I need to validate only two edited files in one command: `projects/template/system-model.c4` and `projects/template/system-views.c4`, without layout drift checks. Give the exact command and explain how to confirm both files were actually filtered in JSON output.",
+      "prompt": "I need to validate only two edited files in one command from the repo root: `projects/template/system-model.c4` and `projects/template/system-views.c4`, without layout drift checks. Give the exact command and explain which JSON fields show targeted filtered errors versus project-wide errors.",
       "files": []
     },
     {
@@ -130,7 +130,7 @@
     },
     {
       "id": 25,
-      "prompt": "I edited exactly three files in the template project: `projects/template/system-model.c4`, `projects/template/system-views.c4`, and `projects/template/likec4.config.json`. I want one syntax/semantic-only validation command from repo root, no layout drift. Put the command on the first line by itself, using repeated `--file` flags. Then say what `filteredFiles`, `filteredErrors`, and `totalErrors` each tell me. Also say what it means if `filteredFiles` comes back as `2` instead of `3`.",
+      "prompt": "I edited exactly three files in the template project: `projects/template/system-model.c4`, `projects/template/system-views.c4`, and `projects/template/likec4.config.json`. I want one syntax/semantic-only validation command from repo root, no layout drift. Put the command on the first line by itself, using repeated `--file` flags only for edited `.c4` source files. Then say what `filteredFiles`, `filteredErrors`, and `totalErrors` each tell me, and explain why the config JSON is not passed as a source-file filter.",
       "files": []
     },
     {

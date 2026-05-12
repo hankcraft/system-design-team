@@ -13,7 +13,7 @@ If workspace already has `likec4` as a dependency, check its version from packag
 
 | Task              | Correct Command                                                       |
 | ----------------- | --------------------------------------------------------------------- |
-| Validate files    | `bunx likec4 validate --json --no-layout --file <file> [project-dir]` |
+| Validate files    | `bunx likec4 validate --json --no-layout --file <path-from-cwd> [project-dir]` |
 | Start dev server  | `bunx likec4 serve [project-dir]`                                     |
 | Export PNG        | `bunx likec4 export png -o ./images [project-dir]`                    |
 | Build static site | `bunx likec4 build -o ./dist [project-dir]`                           |
@@ -27,6 +27,8 @@ If workspace already has `likec4` as a dependency, check its version from packag
 | `bunx likec4 lint ...`                     | Command doesn't exist                     | Use `bunx likec4 validate ...`           |
 | `bunx likec4 verify ...`                   | Command doesn't exist                     | Use `bunx likec4 validate ...`           |
 | `bunx likec4 export png --out-dir ./images` | Unknown flag (`--out-dir`)                | Use `-o ./images` or `--outdir ./images` |
+
+For `validate --file`, pass paths from the command's current working directory. From a repo root, use repo-relative paths such as `projects/template/system-model.c4`, even if the project directory argument is `projects/template`. In JSON output, `filteredErrors` is the reliable targeted failure count; `filteredFiles` counts files with reported filtered errors, not the number of `--file` arguments.
 
 ## `serve` (aliases: `start`, `dev`)
 
