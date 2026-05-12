@@ -120,7 +120,7 @@ views {
     tenant -> platform.api 'POST /events'
     platform.api -> platform.configDb 'lookup tenant + endpoint'
     platform.api -> platform.eventQueue 'enqueue (ack to caller on enqueue)'
-    platform.api -> tenant '202 Accepted'
+    tenant <- platform.api '202 Accepted'
     platform.eventQueue -> platform.worker 'dequeue'
     platform.worker -> tenant 'POST callback'
     parallel {
