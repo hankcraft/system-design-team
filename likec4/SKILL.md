@@ -74,7 +74,7 @@ Compact ambiguity rule:
 
 ## Workflow
 
-1. (Required) Find existing or create new project config (section below). Directory with project config defines the scope for all LikeC4 files in that directory and subdirectories. Ask user if you are uncertain about the scope.
+1. (Required) Find existing or create new project config (section below). Directory with project config defines the scope for all LikeC4 files in that directory and subdirectories. Ask user if you are uncertain about the scope. For a blank workspace, scaffold by copying the closest `examples/` folder rather than writing from scratch — see the *Scaffolding from `examples/`* section.
 2. (Required) Find existing or create new `specification { ... }`, this enables what kinds of elements/deployments/relationships/tags you can use. See Specification section below.
 3. Architecture elements and relationships are defined in `model { ... }` block. See Model section below.
 4. Deployment topology is defined in `deployment { ... }` block. See Deployment section below.
@@ -83,7 +83,15 @@ Compact ambiguity rule:
 
 ## System Design to LikeC4 Workflow
 
-Use this section when the user asks for a C4/LikeC4 diagram of a system, or when another system-design skill hands off actors, topology, flows, SLOs, ADRs, or deployment notes. For exact syntax, the DSL rules in this skill remain authoritative. A complete worked model is in `templates/example-model.c4`; a minimal config template is in `templates/likec4.config.json`.
+Use this section when the user asks for a C4/LikeC4 diagram of a system, or when another system-design skill hands off actors, topology, flows, SLOs, ADRs, or deployment notes. For exact syntax, the DSL rules in this skill remain authoritative.
+
+Scaffold sources (all validate clean against `likec4@1.53+`):
+
+- `templates/example-model.c4` — single-file worked model (webhook platform); paste into a new project for the quickest start.
+- `templates/likec4.config.json` — minimal project config.
+- `examples/c4-abstractions/` — multi-file project shape (spec split out + model + views).
+- `examples/dynamic-views/` — dynamic / sequence views (chained steps, `parallel`, response arrows, notes).
+- `examples/deployments/` — deployment topology (environment / zone / node, `instanceOf`, deployment view).
 
 ### Inputs to model mapping
 
@@ -98,6 +106,22 @@ Use this section when the user asks for a C4/LikeC4 diagram of a system, or when
 | Brownfield current vs target | separate current/target views, or `tag legacy` / `tag new` plus filtered views and before/after dynamic views |
 | Regions, AZs, nodes, failover | `deployment { ... }` plus `deployment view` |
 | Hard-to-reverse decisions | ADR/SLO references in `description`, `notes`, or `metadata` |
+
+### Scaffolding from `examples/`
+
+Copy the closest example folder, rename, then edit — do not write from blank. Each example is a runnable project once you drop a `likec4.config.json` next to it.
+
+| Need | Copy from | What it demonstrates |
+| --- | --- | --- |
+| New project shape: split `spec.c4` + model/views, system → container → component hierarchy, scoped element views | `examples/c4-abstractions/` (`spec.c4` + `bigbank.c4`) | `notation` per kind, `view name of <fqn>`, neighbour predicates (`-> X ->`, `X -> Y.*`), `exclude`, view-level `style` blocks |
+| Critical user flow / sequence / failure path | `examples/dynamic-views/` (`spec.c4` + `dynamic.c4` + `views.c4`) | chained `->` steps, response `<-`, `parallel { }` fan-out, step `notes`, `navigateTo`, `include parent._`, `with { title '' }` override |
+| Multi-region / AZ / failover topology | `examples/deployments/` (`model.c4` + `deployment.c4`) | `specification { deploymentNode ... }`, nested `environment > zone > node`, `instanceOf <fqn>`, deployment-level relationships, `deployment view` with `prod.**` |
+
+Combine by deliverable, not aesthetics:
+
+- Requirements/SLO route → start from `c4-abstractions/`; add a `dynamic.c4` from `dynamic-views/` for the critical flow.
+- ATAM route → one `c4-abstractions/`-shaped model per candidate (rename FQNs); reuse the same `spec.c4` so candidates are comparable.
+- Modernization route → two `c4-abstractions/`-shaped models (current, target) plus a `dynamic-views/`-shaped flow for the cut; add `deployments/` only when rollout topology matters.
 
 ### Default view set
 
@@ -445,3 +469,6 @@ Load a reference file when the task involves the corresponding topic. Claude rea
 | `references/configuration.md`                | Project config options, multi-project setup, include/exclude paths, generators                           |
 | `references/examples.md`                     | Compact real-world examples: extend, groups, globals, dynamic views, deployment, rank                    |
 | `references/troubleshooting.md`              | Errors, unexpected output, eval failures — 6 error tables, 5-step debug workflow, 7 best practices       |
+| `examples/c4-abstractions/`                  | Scaffold a new project (spec.c4 split + model/views): copy when starting from a blank workspace          |
+| `examples/dynamic-views/`                    | Scaffold a sequence / critical-flow / failure-path view: copy for chained steps + `parallel` + notes     |
+| `examples/deployments/`                      | Scaffold a deployment topology (environment/zone/node + `instanceOf` + deployment view)                  |
