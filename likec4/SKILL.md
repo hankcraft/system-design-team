@@ -81,69 +81,56 @@ Compact ambiguity rule:
 5. Views (diagrams) are defined in `views { ... }` block. See Views section below.
 6. After editing LikeC4 files, validate with the CLI
 
-## System Design to LikeC4 Workflow
+## Consuming a `c4-abstractions` handoff
 
-Use this section when the user asks for a C4/LikeC4 diagram of a system, or when another system-design skill hands off actors, topology, flows, SLOs, ADRs, or deployment notes. For exact syntax, the DSL rules in this skill remain authoritative.
+This skill's primary input is the `c4-model.md` produced by the `c4-abstractions` skill. That file holds prose + ASCII for C4 Context / Containers / Components, plus two tables (Element Registry, Relationships) that are the source of truth for FQNs and labels.
 
 Scaffold sources (all validate clean against `likec4@1.53+`):
 
-- `templates/example-model.c4` — single-file worked model (webhook platform); paste into a new project for the quickest start.
+- `templates/example-model.c4` — single-file worked model; paste into a new project for the quickest start.
 - `templates/likec4.config.json` — minimal project config.
-- `examples/c4-abstractions/` — multi-file project shape (spec split out + model + views).
+- `examples/multi-file/` — multi-file project shape (spec split out + model + views).
 - `examples/dynamic-views/` — dynamic / sequence views (chained steps, `parallel`, response arrows, notes).
 - `examples/deployments/` — deployment topology (environment / zone / node, `instanceOf`, deployment view).
 
-### Inputs to model mapping
+### Markdown → LikeC4 mapping
 
-| Design input | LikeC4 output |
+Map each section of `c4-model.md` mechanically. Trust the tables, not the ASCII.
+
+| `c4-model.md` source | LikeC4 output |
 | --- | --- |
-| Actors / external systems in user flow | root-level `actor` / `system` elements |
-| System under design | `system` containing internals |
-| API tier, workers, queues, stores, caches, gateways | `container` or custom kinds such as `queue`, `database`, `gateway` |
-| Sub-parts worth showing | `component` nested in container |
-| Data flows / calls | labelled relationships, e.g. `a -> b 'verb' { technology 'protocol' }` |
-| Critical user flow / unhappy path | `dynamic view` with response arrows and one `parallel { ... }` block for fan-out when needed |
-| Brownfield current vs target | separate current/target views, or `tag legacy` / `tag new` plus filtered views and before/after dynamic views |
-| Regions, AZs, nodes, failover | `deployment { ... }` plus `deployment view` |
-| Hard-to-reverse decisions | ADR/SLO references in `description`, `notes`, or `metadata` |
+| Element Registry row with empty `parent` and `kind` in `{person, softwaresystem, existingsystem}` | Root element in `model { }` |
+| Element Registry row with a `parent` and `kind` in `{container, database, queue, spa, mobileApp}` | Nested element under its parent system |
+| Element Registry row with `kind = component` | Nested `component` inside its parent container |
+| `kind` column | Element kind in `specification { }`; declare any new kind once before use |
+| `technology` column | `technology "<value>"` property on the element (or as `{ technology "<value>" }` on a relationship) |
+| `description` column | `description "<value>"` property on the element |
+| Relationships table row | `<source> -> <target> "<label>" { technology "<technology>" }` (omit the `technology` block when blank) |
+| System Context section | drives the `view context` view set |
+| Containers section | drives the `view containers of <system>` view |
+| `## Components — <container-id>` section | drives `view <id> of <container-id>` for that container |
+| `## Components — <id> (skipped: ...)` heading | do not generate a component view for that container |
 
-### Scaffolding from `examples/`
+### Identifier rules from the handoff
 
-Copy the closest example folder, rename, then edit — do not write from blank. Each example is a runnable project once you drop a `likec4.config.json` next to it.
+- The `id` column in the Element Registry is the LikeC4 identifier. Use it verbatim. The Registry forbids dots, so identifiers are always valid.
+- The FQN is built by walking `parent` chains: root `id` → child `id` → grandchild `id`. Example: `internet-banking.api-application.signin-ctrl`.
+- Across files, references must use the full FQN (see lexical scoping rule earlier in this skill).
 
-| Need | Copy from | What it demonstrates |
-| --- | --- | --- |
-| New project shape: split `spec.c4` + model/views, system → container → component hierarchy, scoped element views | `examples/c4-abstractions/` (`spec.c4` + `bigbank.c4`) | `notation` per kind, `view name of <fqn>`, neighbour predicates (`-> X ->`, `X -> Y.*`), `exclude`, view-level `style` blocks |
-| Critical user flow / sequence / failure path | `examples/dynamic-views/` (`spec.c4` + `dynamic.c4` + `views.c4`) | chained `->` steps, response `<-`, `parallel { }` fan-out, step `notes`, `navigateTo`, `include parent._`, `with { title '' }` override |
-| Multi-region / AZ / failover topology | `examples/deployments/` (`model.c4` + `deployment.c4`) | `specification { deploymentNode ... }`, nested `environment > zone > node`, `instanceOf <fqn>`, deployment-level relationships, `deployment view` with `prod.**` |
+### Default view set generated from the handoff
 
-Combine by deliverable, not aesthetics:
+- `view index { include * }` — landscape.
+- `view context { include <system>; include -> <system> -> }` — collapsed system + its neighbours (drives from System Context).
+- `view containers of <system> { include * }` — drives from Containers section.
+- `view <containerId> of <containerId> { include * }` — one per non-skipped Components section.
+- Add `dynamic view` and `deployment view` only when the user explicitly asks; the `c4-abstractions` handoff does **not** include those.
 
-- Requirements/SLO route → start from `c4-abstractions/`; add a `dynamic.c4` from `dynamic-views/` for the critical flow.
-- ATAM route → one `c4-abstractions/`-shaped model per candidate (rename FQNs); reuse the same `spec.c4` so candidates are comparable.
-- Modernization route → two `c4-abstractions/`-shaped models (current, target) plus a `dynamic-views/`-shaped flow for the cut; add `deployments/` only when rollout topology matters.
+### Done bar
 
-### Default view set
-
-- `view index { include * }` for landscape.
-- `view context { include <system>; include -> <system> -> }` for C4 L1 system context. Do not scope this view to the system; keep the system collapsed with neighbours around it.
-- `view containers of <system> { include * }` for C4 L2 containers. In a scoped view, `*` means the system plus direct children, not recursive descendants.
-- `dynamic view <flow> { ... }` for the critical flow, including expensive unhappy paths when relevant.
-- `deployment view <name> { include * }` only when regions, AZs, failover, rollout topology, or runtime nodes materially affect the design.
-
-### Route-specific handoffs
-
-- Requirements/SLO route: context view, container view, dynamic critical-flow view.
-- ATAM route: one candidate container view per stable candidate ID, plus final context/container/dynamic views for the chosen option.
-- Modernization route: current and target/transitional container views, plus before/after dynamic critical-flow views.
-
-### Concrete model bar
-
-- Model validates with no filtered errors in files you wrote.
-- Container view and dynamic critical-flow view exist for system-design deliverables; route-specific current/target or candidate views exist when required.
-- Every external dependency in the design appears as an element with a labelled relationship.
-- Failure-path elements from the design appear when relevant: dead-letter queues, fallback paths, circuit breaker boundaries, retry paths.
-- SLO targets, capacity assumptions, and ADR references are summarized or linked; do not dump full worksheets into diagram text.
+- Element Registry rows are all reflected in `model { }`; row count matches element count.
+- Relationships table rows are all reflected; row count matches `->` count for static relationships.
+- `likec4 validate --json --no-layout --file <edited.c4> <project-dir>` returns `filteredErrors: 0` for every edited file.
+- Every container view referenced in a `## Components — <id>` section exists; skipped containers have no view.
 
 ## Generate → Self-check → Finalize
 
@@ -469,6 +456,6 @@ Load a reference file when the task involves the corresponding topic. Claude rea
 | `references/configuration.md`                | Project config options, multi-project setup, include/exclude paths, generators                           |
 | `references/examples.md`                     | Compact real-world examples: extend, groups, globals, dynamic views, deployment, rank                    |
 | `references/troubleshooting.md`              | Errors, unexpected output, eval failures — 6 error tables, 5-step debug workflow, 7 best practices       |
-| `examples/c4-abstractions/`                  | Scaffold a new project (spec.c4 split + model/views): copy when starting from a blank workspace          |
+| `examples/multi-file/`                  | Scaffold a new project (spec.c4 split + model/views): copy when starting from a blank workspace          |
 | `examples/dynamic-views/`                    | Scaffold a sequence / critical-flow / failure-path view: copy for chained steps + `parallel` + notes     |
 | `examples/deployments/`                      | Scaffold a deployment topology (environment/zone/node + `instanceOf` + deployment view)                  |
